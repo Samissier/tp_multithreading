@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
-
 import multiprocessing
 import os
 from multiprocessing.managers import BaseManager
 
-PORT = 7481
+PORT = 8000
 KEY = b"AiZa5Uavcoh3PiajvaeTee5z"  # keep it secret, keep it safe !
 
 
