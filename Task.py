@@ -5,13 +5,22 @@ import numpy as np
 
 
 class Task:
-    def __init__(self, identifier, size=None):
+    def __init__(self, identifier, size=None, a=None, b=None):
         self.identifier = identifier
         # choosee the size of the problem
         self.size = size or np.random.randint(300, 3_000)
+
         # Generate the input of the problem
-        self.a = np.random.rand(self.size, self.size)
-        self.b = np.random.rand(self.size)
+        if a is None:
+            self.a = np.random.rand(self.size, self.size)
+        else:
+            self.a = a
+
+        if b is None:
+            self.b = np.random.rand(self.size)
+        else:
+            self.b = b
+
         # prepare room for the results
         self.x = np.zeros((self.size))
         self.time = 0
@@ -21,54 +30,36 @@ class Task:
         self.x = np.linalg.solve(self.a, self.b)
         self.time = time.perf_counter() - start
 
-    def to_json(self) -> str:
-        # Convertir les attributs NumPy en listes pour la sérialisation
-        data = {
-            "identifier": self.identifier,
-            "size": self.size,
-            "a": self.a.tolist(),  # Convertir la matrice NumPy en liste
-            "b": self.b.tolist(),  # Convertir le vecteur NumPy en liste
-            "x": self.x.tolist(),  # Convertir le vecteur de résultat en liste
-            "time": self.time,
-        }
-        return json.dumps(data)  # Sérialiser le dictionnaire en chaîne JSON
+    def toJson(self):
+        return json.dumps(
+            {
+                "a": self.a.tolist(),
+                "b": self.b.tolist(),
+                "s": self.size,
+                "id": self.identifier,
+            }
+        )
 
     @classmethod
-    def from_json(cls, text: str) -> "Task":
-        # Désérialiser le texte JSON en un dictionnaire
-        data = json.loads(text)
-
-        # Créer une instance de Task en utilisant les données du dictionnaire
-        task = cls(identifier=data["identifier"], size=data["size"])
-
-        # Convertir les listes en matrices/vecteurs NumPy
-        task.a = np.array(data["a"])
-        task.b = np.array(data["b"])
-        task.x = np.array(data["x"])
-        task.time = data["time"]
-
-        return task
-
-    def __eq__(self, other: "Task") -> bool:
-        if not isinstance(other, Task):
-            # Retourner False si 'other' n'est pas une instance de Task
-            return False
-
-        # Comparer l'identifiant, la taille et le temps
-        are_basic_attrs_equal = (
-            self.identifier == other.identifier
-            and self.size == other.size
-            and self.time == other.time
+    def from_json(cls, s):
+        dic = json.loads(s)
+        return Task(
+            dic["id"], size=dic["s"], a=np.array(dic["a"]), b=np.array(dic["b"])
         )
 
-        if not are_basic_attrs_equal:
-            return False
+    def __eq__(self, t):
+        if isinstance(t, Task):
+            if np.array_equal(self.a, t.a) and np.array_equal(self.b, t.b):
+                return True
+        return False
 
-        # Comparer les matrices et les vecteurs en utilisant np.array_equal
-        are_arrays_equal = (
-            np.array_equal(self.a, other.a)
-            and np.array_equal(self.b, other.b)
-            and np.array_equal(self.x, other.x)
-        )
 
-        return are_arrays_equal
+if __name__ == "__main__":
+    print("test unitaire a==b (True)")
+    a = Task("000")
+    txt = a.toJson()
+    b = Task.from_json(txt)
+    print(a == b)
+    print("test unitaire a==c (False)")
+    c = Task("001")
+    print(a == c)

@@ -1,4 +1,3 @@
-
 from Manager import QueueClient
 from Task import Task
 
